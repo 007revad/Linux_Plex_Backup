@@ -139,7 +139,7 @@ cleanup() {
         fi
         echo -e "\n\e[41mWARNING\e[0m Plex backup had errors! See error log:"
         echo -e "\nWARNING Plex backup had errors! See error log:" >> "${Log_File}"
-        echo -e "$(basename -- ${Err_Log_File})\n" |& tee -a "${Log_File}"
+        echo -e "$(basename -- "${Err_Log_File}")\n" |& tee -a "${Log_File}"
     else
         # Log and notify of backup success
         echo -e "\nPlex backup completed successfully" |& tee -a "${Log_File}"
