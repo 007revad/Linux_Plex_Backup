@@ -1,61 +1,35 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2317,SC2181
 #--------------------------------------------------------------------------
-# Backup Asustor NAS Plex Database to tgz file in Backup folder.
-# v1.6.0  05-Feb-2023  007revad
+# Backup Linux Plex Database to tgz file in Backup folder.
+# v1.0.1  08-May-2024  007revad
 #
 #   MUST be run by a user in sudo, sudoers or wheel group, or as root
 #
 # To run the script:
-# sudo -i /volume1/scripts/backup_asustor_plex_to_tar.sh
-#   Change /volume1/scripts/ to the path where this script is located
+# sudo -i /share/scripts/backup_linux_plex_to_tar.sh
+#   Change /share/scripts/ to the path where this script is located
 #
 # To do a test run on just Plex's profiles folder run:
-# sudo -i /volume1/scripts/backup_asustor_plex_to_tar.sh test
-#   Change /volume1/scripts/ to the path where this script is located
+# sudo -i /share/scripts/backup_linux_plex_to_tar.sh test
+#   Change /share/scripts/ to the path where this script is located
 #
-# Github: https://github.com/007revad/Asustor_Plex_Backup
+# Github: https://github.com/007revad/Linux_Plex_Backup
 # Script verified at https://www.shellcheck.net/
 #--------------------------------------------------------------------------
-# REQUIRED:
-# Because the Asustor only has BusyBox this script needs bash installed.
-#
-# Install Entware from App Central, then run the following commands via SSH
-# You can run the commands in "Shell In A Box" from App Central, or use PuTTY
-#   opkg update && opkg upgrade
-#   opkg install bash
-#--------------------------------------------------------------------------
+
+scriptver="v1.0.1"
+script=Linux_Plex_Backup
 
 
-# Changes
-# Added restore_asustor_plex.sh script.
-# Changed to abort if not running in bash.
-# Changed /volume1/Plex to /share/Plex in case Asustor allow installing Plex on different volume in future
-# Improved checking if Plex has stopped.
-
-
-#--------------------------------------------------------------------------
-
-# Process Expansion and redirecting stdout and stderr to separate Log and 
-# Error Log causes an error on Asustor NAS unless bash is installed.
-# Check if script is running in GNU bash and not BusyBox ash
-
-Shell=$(/proc/self/exe --version 2>/dev/null | grep "GNU bash" | cut -d "," -f1)
-if [ "$Shell" != "GNU bash" ]; then
-    echo -e "\nYou need to install bash to be able to run this script.\n"
-    echo "1. Install Entware from App Central"
-    echo "2. Run the following commands in a shell:"
-    echo "opkg update && opkg upgrade"
-    echo -e "opkg install bash\n"
-    exit 1
-fi
-
-
-# Read variables from backup_asustor_plex.config
-if [[ -f $(dirname -- "$0";)/backup_asustor_plex.config ]];then
-    source $(dirname -- "$0";)/backup_asustor_plex.config
+# Read variables from backup_linux_plex.config
+if [[ -f $(dirname -- "$0";)/backup_linux_plex.config ]];then
+    # shellcheck disable=SC1090,SC1091
+    while read -r var; do
+        if [[ $var =~ ^[a-zA-Z0-9_]+=.* ]]; then export "$var"; fi
+    done < "$(dirname -- "$0";)"/backup_linux_plex.config
 else
-    echo "backup_asustor_plex.config file missing!"
+    echo "backup_linux_plex.config file missing!"
     exit 1
 fi
 
@@ -64,7 +38,7 @@ fi
 if [[ ! -d $Backup_Directory ]]; then
     echo "Backup directory not found:"
     echo "$Backup_Directory"
-    echo "Check your setting in backup_asustor_plex.config"
+    echo "Check your setting in backup_linux_plex.config"
     exit 1
 fi
 
@@ -88,17 +62,9 @@ NowLong=$( date '+%Y%m%d-%H%M')
 # Set NAS name (used in backup and log filenames)
 
 case "${Name,,}" in
-    brand)
-        # Get NAS Brand
-        if [[ -f /etc/nas.conf ]]; then
-            Nas="$(awk '/^Vendor\s/{print $3}' /etc/nas.conf)"
-        fi
-        ;;
-    model)
-        # Get Asustor model
-        if [[ -f /etc/nas.conf ]]; then
-            Nas="$(awk '/^Model\s/{print $3}' /etc/nas.conf)"
-        fi
+    distro)
+        # Get Linux Distro
+        Nas="$(uname -a | awk '{print $2}')"
         ;;
     hostname|"")
         # Get Hostname
@@ -132,8 +98,6 @@ Err_Log_File="${Backup_Directory}"/"${Backup_Name}"_ERROR.log
 
 #--------------------------------------------------------------------------
 # Create temp error log
-
-# Asustor mktemp only accepts max 6 Xs
 
 # Create temp directory for temp error log
 Tmp_Dir=$(mktemp -d -t plex_to_tar-XXXXXX)
@@ -176,19 +140,9 @@ cleanup() {
         echo -e "\n\e[41mWARNING\e[0m Plex backup had errors! See error log:"
         echo -e "\nWARNING Plex backup had errors! See error log:" >> "${Log_File}"
         echo -e "$(basename -- ${Err_Log_File})\n" |& tee -a "${Log_File}"
-
-        # Add entry to Asustor system log
-        if [[ ${Brand,,} == "asustor" ]] && [[ ${SysLog,,} == "yes" ]]; then
-            syslog --log 0 --level 0 --user "$( whoami )" --event "Plex ${Version}backup had errors. See ERROR.log"
-        fi
     else
         # Log and notify of backup success
         echo -e "\nPlex backup completed successfully" |& tee -a "${Log_File}"
-
-        # Add entry to Asustor system log
-        if [[ ${Brand,,} == "asustor" ]] && [[ ${SysLog,,} == "yes" ]]; then
-            syslog --log 0 --level 0 --user "$( whoami )" --event "Plex ${Version}backup completed successfully."
-        fi
     fi
     exit "${arg1}"
 }
@@ -208,41 +162,21 @@ if [[ $( whoami ) != "root" ]]; then
         echo -e "\nERROR: This script must be run as root!"
         echo -e "ERROR: $( whoami ) is not root. Aborting.\n"
     fi
-    # Add entry to Asustor system log
-    if [[ ${Brand,,} == "asustor" ]] && [[ ${SysLog,,} == "yes" ]]; then
-        syslog --log 0 --level 1 --user "$( whoami )" --event "Plex backup failed. Needs to run as root."
-    fi
     # Abort script because it isn't being run by root
     exit 255
 fi
 
 
 #--------------------------------------------------------------------------
-# Check script is running on an Asustor NAS
+# "Plex Media Server" folder location
 
-if [[ -f /etc/nas.conf ]]; then Brand="$(awk '/^Vendor\s/{print $3}' /etc/nas.conf)"; fi
-# Returns: ASUSTOR
-
-if [[ ${Brand,,} != "asustor" ]]; then
-    if [[ -d $Backup_Directory ]]; then
-        echo "Checking script is running on a Asustor NAS" |& tee -a "${Tmp_Err_Log_File}"
-        echo "ERROR: $(hostname) is not a Asustor! Aborting." |& tee -a "${Tmp_Err_Log_File}"
-    else
-        # Can't log error to log file because $Backup_Directory does not exist
-        echo -e "\nChecking script is running on a Asustor NAS"
-        echo -e "ERROR: $( hostname ) is not a Asustor! Aborting.\n"
-    fi
-    # Can't Add entry to Asustor system log because script not running on an Asustor
-    # Abort script because it's being run on the wrong NAS brand
-    exit 255
-fi
-
-
-#--------------------------------------------------------------------------
-# Find Plex Media Server location
+# ADM   /volume1/Plex/Library/Plex Media Server
+# DSM6  /volume1/Plex/Library/Application Support/Plex Media Server
+# DSM7  /volume1/PlexMediaServer/AppData/Plex Media Server
+# Linux /var/lib/plexmediaserver/Library/Application Support/Plex Media Server
 
 # Set the Plex Media Server data location
-Plex_Data_Path=/share/Plex/Library
+Plex_Data_Path="/var/lib/plexmediaserver/Library/Application Support"
 
 
 #--------------------------------------------------------------------------
@@ -251,10 +185,6 @@ Plex_Data_Path=/share/Plex/Library
 if [[ ! -d $Plex_Data_Path ]]; then
     echo "Plex Media Server data path invalid! Aborting." |& tee -a "${Tmp_Err_Log_File}"
     echo "${Plex_Data_Path}" |& tee -a "${Tmp_Err_Log_File}"
-    if [[ ${Brand,,} == "asustor" ]] && [[ ${SysLog,,} == "yes" ]]; then
-        # Add entry to Asustor system log
-        syslog --log 0 --level 1 --user "$( whoami )" --event "Plex backup failed. Plex data path invalid."
-    fi
     # Abort script because Plex data path invalid
     exit 255
 fi
@@ -263,7 +193,7 @@ fi
 #--------------------------------------------------------------------------
 # Get Plex Media Server version
 
-Version="$(/usr/local/AppCentral/plexmediaserver/Plex\ Media\ Server --version)"
+Version="$(/usr/lib/plexmediaserver/Plex\ Media\ Server --version)"
 # Returns v1.29.2.6364-6d72b0cf6
 # Plex version without v or hex string
 Version=$(printf %s "${Version:1}"| cut -d "-" -f1)
@@ -292,10 +222,12 @@ Err_Log_File="${Backup_Directory}"/"${Backup_Name}"_ERROR.log
 #--------------------------------------------------------------------------
 # Start logging
 
-# Log NAS brand, model, DSM version and hostname
-Model="$(awk '/^Model\s/{print $3}' /etc/nas.conf)"
-ADMversion="$(awk '/^Version\s/{print $3}' /etc/nas.conf)"
-echo "${Brand}" "${Model}" ADM "${ADMversion}" |& tee -a "${Log_File}"
+echo -e "$script $scriptver\n"
+
+# Log Linux distro, version and hostname
+Distro="$(uname -a | awk '{print $2}')"
+DistroVersion="$(uname -a | awk '{print $3}' | cut -d"-" -f1)"
+echo "${Distro}" "${DistroVersion}" |& tee -a "${Log_File}"
 echo "Hostname: $( hostname )" |& tee -a "${Log_File}"
 
 # Log Plex version
@@ -307,10 +239,6 @@ echo Plex version: "${Version}" |& tee -a "${Log_File}"
 
 if [[ ! -d $Backup_Directory ]]; then
     echo "ERROR: Backup directory not found! Aborting backup." |& tee -a "${Log_File}" "${Tmp_Err_Log_File}"
-    if [[ ${Brand,,} == "asustor" ]] && [[ ${SysLog,,} == "yes" ]]; then
-        # Add entry to Asustor system log
-        syslog --log 0 --level 1 --user "$( whoami )" --event "Plex backup failed. Backup directory not found."
-    fi
     # Abort script because backup directory not found
     exit 255
 fi
@@ -321,18 +249,16 @@ fi
 
 echo "Stopping Plex..." |& tee -a "${Log_File}"
 
-Result=$(/usr/local/AppCentral/plexmediaserver/CONTROL/start-stop.sh stop)
+Result=$(systemctl stop plexmediaserver)
+code="$?"
 # Give sockets a moment to close
 sleep 5
 
-if [[ -n $Result ]]; then
-    if [[ $Result == *"stopped process in pidfile"* ]]; then
-        echo "Plex Media Server has stopped." |& tee -a "$Log_File"
-    elif [[ $Result == *"none killed"* ]]; then
-        echo "Plex Media Server wasn't running." |& tee -a "$Log_File"
-    else
-        echo "$Result" |& tee -a "$Log_File"
-    fi
+if [[ $code == "0" ]]; then
+    echo "Plex Media Server has stopped." |& tee -a "$Log_File"
+else
+    echo "$Result" |& tee -a "$Log_File"
+    exit $code
 fi
 
 
@@ -343,13 +269,13 @@ fi
 
 # Kill any residual processes which DSM did not clean up (plug-ins and EAE)
 Pids="$(ps -ef | grep -i 'plex plug-in' | grep -v grep | awk '{print $2}')"
-[ "$Pids" != "" ] && kill -9 $Pids
+[ "$Pids" != "" ] && kill -9 "$Pids"
 
 Pids="$(ps -ef | grep -i 'plex eae service' | grep -v grep | awk '{print $2}')"
-[ "$Pids" != "" ] && kill -9 $Pids
+[ "$Pids" != "" ] && kill -9 "$Pids"
 
 Pids="$(ps -ef | grep -i 'plex tuner service' | grep -v grep | awk '{print $2}')"
-[ "$Pids" != "" ] && kill -9 $Pids
+[ "$Pids" != "" ] && kill -9 "$Pids"
 
 # Give sockets a moment to close
 sleep 2
@@ -373,11 +299,7 @@ if [[ -n $Response ]]; then
             |& tee -a "${Log_File}" "${Tmp_Err_Log_File}"
         echo "${Response}" |& tee -a "${Log_File}" "${Tmp_Err_Log_File}"
         # Start Plex to make sure it's not left partially running
-        /usr/local/AppCentral/plexmediaserver/CONTROL/start-stop.sh start
-        if [[ ${Brand,,} == "asustor" ]] && [[ ${SysLog,,} == "yes" ]]; then
-            # Add entry to Asustor system log
-            syslog --log 0 --level 1 --user "$( whoami )" --event "Plex backup failed. Plex didn't shut down."
-        fi
+        /usr/lib/plexmediaserver/Resources/start.sh
         # Abort script because Plex didn't shut down fully
         exit 255
     else
@@ -460,7 +382,7 @@ echo "=================================================" |& tee -a "${Log_File}"
 # Start Plex Media Server
 
 echo "Starting Plex..." |& tee -a "${Log_File}"
-/usr/local/AppCentral/plexmediaserver/CONTROL/start-stop.sh start
+/usr/lib/plexmediaserver/Resources/start.sh
 
 
 #--------------------------------------------------------------------------
