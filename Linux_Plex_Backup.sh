@@ -110,7 +110,8 @@ Tmp_Err_Log_File=$(mktemp "${Tmp_Dir}"/errorlog-XXXXXX)
 # Create trap and clean up function
 
 # Tmp logs clean up function
-cleanup() {
+# shellcheck disable=SC2329
+cleanup(){ 
     arg1=$?
     # Move tmp_error_log to error log if tmp_error_log is not empty
     if [[ -s $Tmp_Err_Log_File ]] && [[ -d $Backup_Directory ]]; then
