@@ -54,13 +54,13 @@ You need to set **backupDirectory=** near the top of the script (below the heade
 backupDirectory="/share/Backups/Plex_Backups"
 ```
 
-The script gets the brand, model and hostname from the NAS to use logs and backup name.
+The script gets the disto and hostname from the NAS to use logs and backup name.
 Set Name= to "distro", "hostname" or some nickname. If Name= is blank the Linux computer's hostname will be used.
 
 The LogAll setting enables, or disables, logging every file that gets backed up. Set LogAll= to "yes" or "no". Blank is the same as no.
 
 ```YAML
-Name="brand"
+Name="distro"
 LogAll="no"
 ```
 
