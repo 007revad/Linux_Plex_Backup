@@ -23,6 +23,9 @@ script=Linux_Plex_Backup
 
 
 # Read variables from backup_linux_plex.config
+Backup_Directory=""
+Name=""
+LogAll=""
 if [[ -f $(dirname -- "$0";)/backup_linux_plex.config ]];then
     # shellcheck disable=SC1090,SC1091
     while read -r var; do
@@ -111,7 +114,7 @@ Tmp_Err_Log_File=$(mktemp "${Tmp_Dir}"/errorlog-XXXXXX)
 
 # Tmp logs clean up function
 # shellcheck disable=SC2329
-cleanup(){ 
+cleanup() {
     arg1=$?
     # Move tmp_error_log to error log if tmp_error_log is not empty
     if [[ -s $Tmp_Err_Log_File ]] && [[ -d $Backup_Directory ]]; then
