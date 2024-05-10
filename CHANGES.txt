@@ -1,5 +1,6 @@
 v1.0.2
-- Added restore script.
+- Added working restore script.
 
 v1.0.1
 - First release.
+- Note: Restore script not working yet.
