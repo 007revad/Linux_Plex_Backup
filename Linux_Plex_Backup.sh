@@ -2,7 +2,7 @@
 # shellcheck disable=SC2317,SC2181
 #--------------------------------------------------------------------------
 # Backup Linux Plex Database to tgz file in Backup folder.
-# v1.0.1  08-May-2024  007revad
+# v1.0.2  08-May-2024  007revad
 #
 #   MUST be run by a user in sudo, sudoers or wheel group, or as root
 #
@@ -18,7 +18,7 @@
 # Script verified at https://www.shellcheck.net/
 #--------------------------------------------------------------------------
 
-scriptver="v1.0.1"
+scriptver="v1.0.2"
 script=Linux_Plex_Backup
 
 
@@ -114,7 +114,7 @@ Tmp_Err_Log_File=$(mktemp "${Tmp_Dir}"/errorlog-XXXXXX)
 
 # Tmp logs clean up function
 # shellcheck disable=SC2329
-cleanup() {
+cleanup(){ 
     arg1=$?
     # Move tmp_error_log to error log if tmp_error_log is not empty
     if [[ -s $Tmp_Err_Log_File ]] && [[ -d $Backup_Directory ]]; then
@@ -226,7 +226,7 @@ Err_Log_File="${Backup_Directory}"/"${Backup_Name}"_ERROR.log
 #--------------------------------------------------------------------------
 # Start logging
 
-echo -e "$script $scriptver\n"
+echo -e "$script $scriptver\n" |& tee -a "${Log_File}"
 
 # Log Linux distro, version and hostname
 Distro="$(uname -a | awk '{print $2}')"
