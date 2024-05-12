@@ -62,6 +62,9 @@
 - **<a href="https://github.com/007revad/Synology_DSM_reinstall">Synology_DSM_reinstall</a>**
   - Easily re-install the same DSM version without losing any data or settings.
 
+- **<a href="https://github.com/007revad/Synology_CPU_temperature">Synology_CPU_temperature</a>**
+  - Get Synology NAS CPU temperature via SSH.
+
 - **<a href="https://github.com/007revad/Synology_enable_sequential_IO">Synology_enable_sequential_IO</a>**
   - Enables sequential I/O for your SSD caches, like DSM 6 had.
 
