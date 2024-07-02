@@ -1,4 +1,4 @@
-v1.0.3
+v1.0.4
 - Bug fix for failing to start Plex Media Server. Issue #8
   - Fixed in Linux_Plex_Backup.sh
   - Fixed in Restore_Linux_Plex_Backup.sh
