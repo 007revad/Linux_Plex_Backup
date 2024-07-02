@@ -2,7 +2,7 @@
 # shellcheck disable=SC2317,SC2181
 #--------------------------------------------------------------------------
 # Backup Linux Plex Database to tgz file in Backup folder.
-# v1.0.2  08-May-2024  007revad
+# v1.0.3  02-Jul-2024  007revad
 #
 #   MUST be run by a user in sudo, sudoers or wheel group, or as root
 #
@@ -18,7 +18,7 @@
 # Script verified at https://www.shellcheck.net/
 #--------------------------------------------------------------------------
 
-scriptver="v1.0.2"
+scriptver="v1.0.3"
 script=Linux_Plex_Backup
 
 
@@ -386,7 +386,11 @@ echo "=================================================" |& tee -a "${Log_File}"
 # Start Plex Media Server
 
 echo "Starting Plex..." |& tee -a "${Log_File}"
-/usr/lib/plexmediaserver/Resources/start.sh
+if cd /usr/lib/plexmediaserver; then
+    ./Resources/start.sh
+else
+    echo "Failed start Plex!"
+fi
 
 
 #--------------------------------------------------------------------------
