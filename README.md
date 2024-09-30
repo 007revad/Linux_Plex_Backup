@@ -78,6 +78,27 @@ Run the script by a user in sudo, sudoers or wheel group.
 sudo -s "/share/scripts/Linux_Plex_Backup.sh"
 ```
 
+### Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| /usr/bin/env: ‘bash\r’: No such file or directory | File has Mac line endings! | [Download latest zip file](https://github.com/007revad/Linux_Plex_Backup/releases) |
+| Cursor sits there doing nothing | File has Windows line endings! | [Download latest zip file](https://github.com/007revad/Linux_Plex_Backup/releases) |
+| syntax error near unexpected token | You downloaded the webpage! | [Download latest zip file](https://github.com/007revad/Linux_Plex_Backup/releases) |
+
+If you get a "No such file or directory" error check the following:
+
+1. Make sure you unpacked the zip or rar file that you downloaded and are trying to run the Linux_Plex_Backup.sh file.
+2. If the path to the script contains any spaces you need to enclose the path/scriptname in double quotes:
+   ```YAML
+   sudo -s "/share/folder with spaces/Linux_Plex_Backup.sh"
+   ```
+3. Set the script files as executable:
+   ```YAML
+   sudo chmod +x "/share/scripts/Linux_Plex_Backup.sh"
+   sudo chmod +x "/share/scripts/Restore_Linux_Plex_Backup.sh"
+   ```
+
 ### Testing the script
 
 If you run the script with the **test** argument it will only backup Plex's Logs folder.
@@ -110,7 +131,7 @@ The first thing you'll see is a menu listing all of your Plex backups that you c
 
 ### Restoring a test backup
 
-If you previously ran Linux Plex Backup with the **test** argument you can run Restore_Linuxr_Plex_Backup.sh with the **test** argument so the menu will list any small backups (less than 1 MiB).
+If you previously ran Linux Plex Backup with the **test** argument you can run Restore_Linux_Plex_Backup.sh with the **test** argument so the menu will list any small backups (less than 1 MiB).
 
 ```YAML
 sudo -s "/share/scripts/Restore_Linux_Plex_Backup.sh" test
