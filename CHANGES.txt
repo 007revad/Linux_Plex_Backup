@@ -1,3 +1,7 @@
+v1.0.5
+- Bug fix for default conf file. Double quotes not needed and cause issue #11 
+- Updated Restore_Linux_Plex_Backup.sh to handle reading settings from conf file with spaces and no double quotes.
+
 v1.0.4
 - Bug fix for failing to start Plex Media Server. Issue #8
   - Fixed in Linux_Plex_Backup.sh
