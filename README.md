@@ -51,17 +51,21 @@ If you run multiple backups on the same day the time will be included in the fil
 You need to set **backupDirectory=** near the top of the script (below the header). Set it to the location where you want the backup saved to. 
 
 ```YAML
-backupDirectory="/share/Backups/Plex_Backups"
+Backup_Directory=/share/Backups/Plex_Backups
+```
+or
+```YAML
+Backup_Directory=/share/folder with spaces/Plex_Backups
 ```
 
 The script gets the disto and hostname from the NAS to use logs and backup name.
-Set Name= to "distro", "hostname" or some nickname. If Name= is blank the Linux computer's hostname will be used.
+Set Name= to distro, hostname or you can set a 'nickname'. If Name= is blank the Linux computer's hostname will be used.
 
-The LogAll setting enables, or disables, logging every file that gets backed up. Set LogAll= to "yes" or "no". Blank is the same as no.
+The LogAll setting enables, or disables, logging every file that gets backed up. Set LogAll= to yes or no. Blank is the same as no.
 
 ```YAML
-Name="distro"
-LogAll="no"
+Name=distro
+LogAll=no
 ```
 
 ### Requirements
