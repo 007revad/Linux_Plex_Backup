@@ -64,6 +64,7 @@ Set Name= to distro, hostname or you can set a 'nickname'. If Name= is blank the
 The LogAll setting enables, or disables, logging every file that gets backed up. Set LogAll= to yes or no. Blank is the same as no.
 
 The KeepQty setting tells the script to keep only keep the latest N backups (and delete older backups).
+  - If KeepQty is blank or set to 0 all backups are kept.
 
 ```YAML
 Name=distro
