@@ -20,6 +20,7 @@ This is a bash script to backup Linux Plex Media Server settings and database, a
 -   Stops Plex Media Server, then checks Plex actually stopped.
 -   Backs up Plex Media Server to a tgz file (**excluding the folders listed in plex_backup_exclude.txt**).
 -   Starts Plex Media Server.
+-   Emails the log to your email address (optional). Use when you have scheduled the script.
 
 #### It also saves a log in the same location as the backup file, including:
 
