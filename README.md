@@ -89,7 +89,7 @@ In Linux the msmtprc config file can be either:
     $XDG_CONFIG_HOME/msmtp/config
 ```
 
-The default msmtprc or config usually contains:
+The default msmtprc or config file usually contains:
 ```
 # Set default values for all following accounts.
 defaults
