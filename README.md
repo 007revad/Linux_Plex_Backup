@@ -133,7 +133,7 @@ account default: dave@myisp.com
 
 ```
 
-If you don't want to include your email account's password in plain text in the msmtprc or confi file see https://marlam.de/msmtp/msmtprc.txt
+If you don't want to include your email account's password in plain text in the msmtprc or config file see https://marlam.de/msmtp/msmtprc.txt
 
 ### Running the script
 
