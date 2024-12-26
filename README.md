@@ -111,6 +111,30 @@ tls_trust_file /usr/builtin/etc/msmtp/ca-certificates.crt
 #account default: user@gmail.com
 ```
 
+**Example email account settings**
+```
+defaults
+timeout 15
+tls on
+tls_trust_file /usr/builtin/etc/msmtp/ca-certificates.crt
+#logfile ~/.msmtplog
+
+# The SMTP server of the provider.
+account dave@myisp.com
+host mail.myisp.com
+port 587
+from dave@myisp.com
+auth on
+user dave@myisp.com
+password mypassword
+
+# Set a default account
+account default: dave@myisp.com
+
+```
+
+If you don't want to include your email account's password in plain text in the msmtprc or confi file see https://marlam.de/msmtp/msmtprc.txt
+
 ### Running the script
 
 Run the script by a user in sudo, sudoers or wheel group.
