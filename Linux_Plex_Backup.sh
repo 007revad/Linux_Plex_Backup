@@ -2,7 +2,7 @@
 # shellcheck disable=SC2317,SC2181
 #--------------------------------------------------------------------------
 # Backup Linux Plex Database to tgz file in Backup folder.
-# v1.1.6  04-Nov-2024  007revad
+# v1.2.7  26-Dec-2024  007revad
 #
 #   MUST be run by a user in sudo, sudoers or wheel group, or as root
 #
