@@ -78,6 +78,39 @@ Make sure that backup_linux_plex.config and plex_backup_exclude.txt are in the s
 
 **Note:** Due to some of the commands used **this script needs to be** run by a user in sudo, sudoers or wheel group, or as root
 
+If you want the script to send an email of the log after the script finishes you need to have msmtp installed (most Linux distros include msmtp).
+
+### Configuring mstp so the script can send emails
+
+In Linux the msmtprc config file can be either:
+```
+    /etc/msmtprc
+    ~/.msmtprc
+    $XDG_CONFIG_HOME/msmtp/config
+```
+
+The msmtprc or config usually contains:
+```
+# Set default values for all following accounts.
+defaults
+timeout 15
+tls on
+tls_trust_file /usr/builtin/etc/msmtp/ca-certificates.crt
+#logfile ~/.msmtplog
+
+# The SMTP server of the provider.
+#account user@gmail.com
+#host smtp.gmail.com
+#port 587
+#from user@gmail.com
+#auth on
+#user user@gmail.com
+#password passwd
+
+# Set a default account
+#account default: user@gmail.com
+```
+
 ### Running the script
 
 Run the script by a user in sudo, sudoers or wheel group.
