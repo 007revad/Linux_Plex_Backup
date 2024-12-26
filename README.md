@@ -63,7 +63,7 @@ Set Name= to distro, hostname or you can set a 'nickname'. If Name= is blank the
 
 The LogAll setting enables, or disables, logging every file that gets backed up. Set LogAll= to yes or no. Blank is the same as no.
 
-If to_email_address and from_email_address are set and email containing the log will be sent after the script finishes. 
+If to_email_address and from_email_address are set an email containing the log will be sent after the script finishes. 
 
 ```YAML
 to_email_address=email@email.com
