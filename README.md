@@ -82,7 +82,7 @@ If you want the script to send an email of the log after the script finishes you
 
 ### Configuring msmtp so the script can send emails
 
-In Linux the msmtprc config file can be either:
+Depending on your Linux distro the msmtprc or config file can be either:
 ```
     /etc/msmtprc
     ~/.msmtprc
