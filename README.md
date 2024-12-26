@@ -80,7 +80,7 @@ Make sure that backup_linux_plex.config and plex_backup_exclude.txt are in the s
 
 If you want the script to send an email of the log after the script finishes you need to have msmtp installed (most Linux distros include msmtp).
 
-### Configuring mstp so the script can send emails
+### Configuring msmtp so the script can send emails
 
 In Linux the msmtprc config file can be either:
 ```
@@ -130,7 +130,6 @@ password mypassword
 
 # Set a default account
 account default: dave@myisp.com
-
 ```
 
 If you don't want to include your email account's password in plain text in the msmtprc or config file see https://marlam.de/msmtp/msmtprc.txt
