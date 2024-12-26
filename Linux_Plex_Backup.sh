@@ -16,9 +16,15 @@
 #
 # Github: https://github.com/007revad/Linux_Plex_Backup
 # Script verified at https://www.shellcheck.net/
+#
+# Scheduling the script:
+# https://www.freecodecamp.org/news/cron-jobs-in-linux/
+# https://crontab.guru/
+#
+# https://arnaudr.io/2020/08/24/send-emails-from-your-terminal-with-msmtp/
 #--------------------------------------------------------------------------
 
-scriptver="v1.1.6"
+scriptver="v1.2.7"
 script=Linux_Plex_Backup
 
 
@@ -27,6 +33,8 @@ Backup_Directory=""
 Name=""
 LogAll=""
 KeepQty=""
+to_email_address=""
+from_email_address=""
 if [[ -f $(dirname -- "$0";)/backup_linux_plex.config ]];then
     # shellcheck disable=SC1090,SC1091
     while read -r var; do
@@ -149,10 +157,77 @@ cleanup(){
         # Log and notify of backup success
         echo -e "\nPlex backup completed successfully" |& tee -a "${Log_File}"
     fi
+
+    # Send log via email if both logging and emails are enabled
+    if [[ $to_email_address && $from_email_address ]]; then
+        email_contents="email_contents.txt"
+        send_email "$to_email_address" "$from_email_address" "$Backup_Directory"\
+            "$email_contents" "$Nas - $script log"
+    fi
+
     exit "${arg1}"
 }
 
 trap cleanup EXIT
+
+
+# Send email function
+send_email(){ 
+    # $1 is $to_email_address
+    # $2 is $from_email_address
+    # $3 is $Backup_Directory
+    # $4 is $email_contents"
+    # $5 is $subject
+    # $6 is $mail_body
+
+    if [[ ! -f "$Log_File" ]]; then
+        echo -e "\nWARNING Cannot send email as directory $Log_File does not exist"\
+            |& tee -a "${Err_Log_File}"
+    elif [[ "${3}" == "" || "${4}" == "" ]]; then
+        echo -e "\nWARNING Send email failed. Incorrect data was passed to \"send_email\" function"\
+            |& tee -a "${Err_Log_File}"
+    else
+        if [[ -d "${3}" ]]; then  # Make sure directory exists
+            if [[ -w "${3}" ]]; then  # Make sure directory is writable 
+                if [[ -r "${3}" ]]; then  # Make sure directory is readable 
+                    echo "To: ${1} " > "${3}/${4}"
+                    echo "From: ${2} " >> "${3}/${4}"
+                    echo "Subject: ${5}" >> "${3}/${4}"
+                    echo "" >> "${3}/${4}"
+                    cat "$Log_File" >> "${3}/${4}"
+
+                    #if [[ "${1}" == "" || "${2}" == "" || "${5}" == "" || "${6}" == "" ]]; then
+                    if [[ "${1}" == "" || "${2}" == "" || "${5}" == "" ]]; then
+                        echo -e "\nWARNING One or more email address parameters [to, from, subject,"\
+                            "mail_body] was not supplied, Cannot send an email" |& tee -a "${Log_File}"
+                    else
+                        if ! command -v msmtp &> /dev/null  # Verify the msmtp command is available 
+                        then
+                            echo -e "\nWARNING Cannot Send Email as command \"msmtp\" was not found"\
+                                |& tee -a "${Log_File}"
+                        else
+                            local email_response=$(msmtp "${1}" < "${3}/${4}"  2>&1)
+                            if [[ "$email_response" == "" ]]; then
+                                echo -e "\nEmail Sent Successfully" |& tee -a "${Log_File}"
+                            else
+                                echo -e "\nWARNING An error occurred while sending email."\
+                                    "The error was: $email_response\n\n" |& tee -a "${Log_File}"
+                            fi    
+                        fi
+                    fi
+                else
+                    echo -e "Cannot send email as directory \"${3}\" does not have READ permissions"\
+                        |& tee -a "${Log_File}"
+                fi
+            else
+                echo -e "Cannot send email as directory \"${3}\" does not have WRITE permissions"\
+                    |& tee -a "${Log_File}"
+            fi
+        else
+            echo -e "Cannot send email as directory \"${3}\" does not exist" |& tee -a "${Log_File}"
+        fi
+    fi
+}
 
 
 #--------------------------------------------------------------------------
@@ -438,6 +513,71 @@ printf "Backup Duration: " |& tee -a "${Log_File}"
 printf '%dd:%02dh:%02dm:%02ds\n' \
 $((Runtime/86400)) $((Runtime%86400/3600)) $((Runtime%3600/60))\
     $((Runtime%60)) |& tee -a "${Log_File}"
+
+
+#--------------------------------------------------------------------------
+# Send log via email if both logging and emails are enabled
+
+# Send Email Notification Function
+send_email(){ 
+    # $1 is $to_email_address
+    # $2 is $from_email_address
+    # $3 is $log_file_location
+    # $4 is $log_file_name
+    # $5 is $subject
+    # $6 is $mail_body
+
+    if [[ "${3}" == "" || "${4}" == "" ]]; then
+        echo "Incorrect data was passed to the \"send_email\" function, cannot send email"
+    else
+        if [[ -d "${3}" ]]; then  # Make sure directory exists
+            if [[ -w "${3}" ]]; then  # Make sure directory is writable 
+                if [[ -r "${3}" ]]; then  # Make sure directory is readable 
+                    #local now=$(date +"%T")
+                    echo "To: ${1} " > "${3}/${4}"
+                    echo "From: ${2} " >> "${3}/${4}"
+                    echo "Subject: ${5}" >> "${3}/${4}"
+                    #echo "" >> "${3}/${4}"
+                    #echo -e "\n$now - ${6}\n" >> "${3}/${4}"
+                                                    
+                    if [[ "${1}" == "" || "${2}" == "" || "${5}" == "" || "${6}" == "" ]]; then
+                        echo -e "\n\nOne or more email address parameters [to, from, subject, mail_body] was not supplied, Cannot send an email"
+                    else
+                        if ! command -v msmtp &> /dev/null  # Verify the msmtp command is available 
+                        then
+                            echo "Cannot Send Email as command \"msmtp\" was not found"
+                        else
+                            local email_response=$(msmtp "${1}" < "${3}/${4}"  2>&1)
+                            if [[ "$email_response" == "" ]]; then
+                                echo -e "\nEmail Sent Successfully" |& tee -a "${3}/${4}"
+                            else
+                                echo -e "\n\nWARNING -- An error occurred while sending email. The error was: $email_response\n\n" |& tee "${3}/${4}"
+                            fi    
+                        fi
+                    fi
+                else
+                    echo "Cannot send email as directory \"${3}\" does not have READ permissions"
+                fi
+            else
+                echo "Cannot send email as directory \"${3}\" does not have WRITE permissions"
+            fi
+        else
+            echo "Cannot send email as directory \"${3}\" does not exist"
+        fi
+    fi
+}
+
+
+if ! command -v msmtp &> /dev/null; then  # Verify the msmtp command is available 
+    echo -e "\nCannot Send Email as command \"msmtp\" was not found!" |& tee -a "${Log_File}"
+else
+    email_response=$(msmtp "${to_email_address}" < "${Log_File}" 2>&1)
+    if [[ "$email_response" == "" ]]; then
+        echo -e "\nEmail sent successfully" |& tee -a "${Log_File}"
+    else
+        echo -e "\nWARNING An error occurred while sending email. The error was: $email_response\n" |& tee -a "${Log_File}"
+    fi    
+fi
 
 
 #--------------------------------------------------------------------------
