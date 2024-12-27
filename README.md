@@ -167,9 +167,9 @@ account default: dave@gmail.com
 For gmail you will need to generate an "app password" and use that instead of your gmail password.
 
 1. Go to https://myaccount.google.com/apppasswords and sign into google.
-2. Enter a name in the form of appname@computer-name like plexbackup@ubuntu and click Create.
-3. In the "Generated app password" popup copy the 16 character password.
-4. In your msmtprc file enter the 16 character password (without spaces) for password ****************
+2. Enter a name in the form of `appname@computer-name` like `plexbackup@ubuntu` and click Create.
+3. In the "Generated app password" popup copy the 16 character app password which will be like `abcd efgh ijkl mnop`.
+4. In your msmtprc or config file replace `password passwd` with the 16 character app password (without spaces) like `password abcdefghijklmnop`
 
 ### Running the script
 
