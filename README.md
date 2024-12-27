@@ -119,7 +119,7 @@ tls_trust_file /usr/builtin/etc/msmtp/ca-certificates.crt
 #account default: user@gmail.com
 ```
 
-**Example email account settings**
+**Example email account settings for using a smtp server**
 ```
 defaults
 timeout 15
@@ -141,6 +141,35 @@ account default: dave@myisp.com
 ```
 
 If you don't want to include your email account's password in plain text in the msmtprc or config file see https://marlam.de/msmtp/msmtprc.txt
+
+**Example email account settings for using gmail**
+```
+# Set default values for all following accounts.
+defaults
+timeout 15
+tls on
+tls_trust_file /usr/builtin/etc/msmtp/ca-certificates.crt
+#logfile ~/.msmtplog
+
+# The SMTP server of the provider.
+account dave@gmail.com
+host smtp.gmail.com
+port 587
+from dave@gmail.com
+auth on
+user dave@gmail.com
+password gmailapppassword
+
+# Set a default account
+account default: dave@gmail.com
+```
+
+For gmail you will need to generate an "app password" and use that instead of your gmail password.
+
+1. Go to https://myaccount.google.com/apppasswords and sign into google.
+2. Enter a name in the form of appname@computer-name like plexbackup@ubuntu and click Create.
+3. In the "Generated app password" popup copy the 16 character password.
+4. In your msmtprc file enter the 16 character password (without spaces) for password ****************
 
 ### Running the script
 
