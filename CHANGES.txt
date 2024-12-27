@@ -1,7 +1,8 @@
-v1.2.7
+v1.2.8-RC
 - Added optional support to send an email of the log after a backup.
   - Set the to and from email addresses in backup_linux_plex.config
   - Requires msmtp (most distros include msmtp).
+- Bug fix for sending email twice. 
 
 v1.1.6
 - Added KeepQty setting to delete old backups and only keep the latest N backups.
