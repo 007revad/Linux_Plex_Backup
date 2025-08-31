@@ -1,4 +1,8 @@
-v1.2.8-RC
+v1.3.9
+- Added support for Plex Media Server installed in snap.
+  - Set snap=yes in backup_linux_plex.config
+
+v1.2.8
 - Added optional support to send an email of the log after a backup.
   - Set the to and from email addresses in backup_linux_plex.config
   - Requires msmtp (most distros include msmtp).
