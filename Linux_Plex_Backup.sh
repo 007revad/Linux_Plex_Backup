@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2317,SC2181
+# shellcheck disable=SC2317,SC2181,SC2009,SC2129,SC2163
 #--------------------------------------------------------------------------
 # Backup Linux Plex Database to tgz file in Backup folder.
-# v1.1.6  04-Nov-2024  007revad
+# v1.3.9  31-Aug-2025  007revad
 #
 #   MUST be run by a user in sudo, sudoers or wheel group, or as root
 #
@@ -16,17 +16,26 @@
 #
 # Github: https://github.com/007revad/Linux_Plex_Backup
 # Script verified at https://www.shellcheck.net/
+#
+# Scheduling the script:
+# https://www.freecodecamp.org/news/cron-jobs-in-linux/
+# https://crontab.guru/
+#
+# https://arnaudr.io/2020/08/24/send-emails-from-your-terminal-with-msmtp/
 #--------------------------------------------------------------------------
 
-scriptver="v1.1.6"
+scriptver="v1.3.9"
 script=Linux_Plex_Backup
 
 
 # Read variables from backup_linux_plex.config
 Backup_Directory=""
 Name=""
+snap=""
 LogAll=""
 KeepQty=""
+to_email_address=""
+from_email_address=""
 if [[ -f $(dirname -- "$0";)/backup_linux_plex.config ]];then
     # shellcheck disable=SC1090,SC1091
     while read -r var; do
@@ -149,10 +158,81 @@ cleanup(){
         # Log and notify of backup success
         echo -e "\nPlex backup completed successfully" |& tee -a "${Log_File}"
     fi
+
+    # Send log via email if both logging and emails are enabled
+    if [[ $to_email_address && $from_email_address ]]; then
+        echo -e "\nSending email..."
+        email_contents="email_contents.txt"
+        send_email "$to_email_address" "$from_email_address" "$Backup_Directory"\
+            "$email_contents" "$Nas - $script log"
+    fi
+
     exit "${arg1}"
 }
 
 trap cleanup EXIT
+
+
+# Send email function
+# shellcheck disable=SC2329  # Invoked indirectly
+send_email(){ 
+    # $1 is $to_email_address
+    # $2 is $from_email_address
+    # $3 is $Backup_Directory
+    # $4 is $email_contents"
+    # $5 is $subject
+    # $6 is $mail_body
+
+    if [[ ! -f "$Log_File" ]]; then
+        echo -e "\nWARNING Cannot send email as directory $Log_File does not exist"\
+            |& tee -a "${Err_Log_File}"
+    elif [[ "${3}" == "" || "${4}" == "" ]]; then
+        echo -e "\nWARNING Send email failed. Incorrect data was passed to \"send_email\" function"\
+            |& tee -a "${Err_Log_File}"
+    else
+        if [[ -d "${3}" ]]; then  # Make sure directory exists
+            if [[ -w "${3}" ]]; then  # Make sure directory is writable 
+                if [[ -r "${3}" ]]; then  # Make sure directory is readable 
+                    echo "To: ${1} " > "${3}/${4}"
+                    echo "From: ${2} " >> "${3}/${4}"
+                    echo "Subject: ${5}" >> "${3}/${4}"
+                    echo "" >> "${3}/${4}"
+                    cat "$Log_File" >> "${3}/${4}"
+
+                    #if [[ "${1}" == "" || "${2}" == "" || "${5}" == "" || "${6}" == "" ]]; then
+                    if [[ "${1}" == "" || "${2}" == "" || "${5}" == "" ]]; then
+                        echo -e "\nWARNING One or more email address parameters [to, from, subject,"\
+                            "mail_body] was not supplied, Cannot send an email" |& tee -a "${Log_File}"
+                    else
+                        if ! command -v msmtp &> /dev/null  # Verify the msmtp command is available 
+                        then
+                            echo -e "\nWARNING Cannot Send Email as command \"msmtp\" was not found"\
+                                |& tee -a "${Log_File}"
+                        else
+                            local email_response
+                            email_response=$(msmtp "${1}" < "${3}/${4}"  2>&1)
+                            if [[ "$email_response" == "" ]]; then
+                                domain=$(echo "$to_email_address" | awk -F '@' '{print $NF}')
+                                echo -e "Email sent successfully to $domain" |& tee -a "${Log_File}"
+                            else
+                                echo -e "\nWARNING An error occurred while sending email."\
+                                    "The error was: $email_response\n\n" |& tee -a "${Log_File}"
+                            fi    
+                        fi
+                    fi
+                else
+                    echo -e "Cannot send email as directory \"${3}\" does not have READ permissions"\
+                        |& tee -a "${Log_File}"
+                fi
+            else
+                echo -e "Cannot send email as directory \"${3}\" does not have WRITE permissions"\
+                    |& tee -a "${Log_File}"
+            fi
+        else
+            echo -e "Cannot send email as directory \"${3}\" does not exist" |& tee -a "${Log_File}"
+        fi
+    fi
+}
 
 
 #--------------------------------------------------------------------------
@@ -179,9 +259,14 @@ fi
 # DSM6  /volume1/Plex/Library/Application Support/Plex Media Server
 # DSM7  /volume1/PlexMediaServer/AppData/Plex Media Server
 # Linux /var/lib/plexmediaserver/Library/Application Support/Plex Media Server
+# snap  /var/snap/plexmediaserver/common/Library/Application Support
 
 # Set the Plex Media Server data location
-Plex_Data_Path="/var/lib/plexmediaserver/Library/Application Support"
+if [[ ${snap,,} == "yes" ]]; then
+    Plex_Data_Path="/var/snap/plexmediaserver/common/Library/Application Support"
+else
+    Plex_Data_Path="/var/lib/plexmediaserver/Library/Application Support"
+fi
 
 
 #--------------------------------------------------------------------------
@@ -254,7 +339,11 @@ fi
 
 echo "Stopping Plex..." |& tee -a "${Log_File}"
 
-Result=$(systemctl stop plexmediaserver)
+if [[ ${snap,,} == "yes" ]]; then
+    Result=$(snap stop plexmediaserver)
+else
+    Result=$(systemctl stop plexmediaserver)
+fi
 code="$?"
 # Give sockets a moment to close
 sleep 5
@@ -304,7 +393,12 @@ if [[ -n $Response ]]; then
             |& tee -a "${Log_File}" "${Tmp_Err_Log_File}"
         echo "${Response}" |& tee -a "${Log_File}" "${Tmp_Err_Log_File}"
         # Start Plex to make sure it's not left partially running
-        /usr/lib/plexmediaserver/Resources/start.sh
+        if [[ ${snap,,} == "yes" ]]; then
+            snap start plexmediaserver
+        else
+            #/usr/lib/plexmediaserver/Resources/start.sh
+            systemctl start plexmediaserver
+        fi
         # Abort script because Plex didn't shut down fully
         exit 255
     else
@@ -387,8 +481,12 @@ echo "=================================================" |& tee -a "${Log_File}"
 # Start Plex Media Server
 
 echo "Starting Plex..." |& tee -a "${Log_File}"
-#/usr/lib/plexmediaserver/Resources/start.sh
-systemctl start plexmediaserver
+if [[ ${snap,,} == "yes" ]]; then
+    snap start plexmediaserver
+else
+    #/usr/lib/plexmediaserver/Resources/start.sh
+    systemctl start plexmediaserver
+fi
 
 
 #--------------------------------------------------------------------------

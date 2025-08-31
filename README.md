@@ -20,6 +20,7 @@ This is a bash script to backup Linux Plex Media Server settings and database, a
 -   Stops Plex Media Server, then checks Plex actually stopped.
 -   Backs up Plex Media Server to a tgz file (**excluding the folders listed in plex_backup_exclude.txt**).
 -   Starts Plex Media Server.
+-   Emails the log to your email address (optional). Use when you have scheduled the script.
 
 #### It also saves a log in the same location as the backup file, including:
 
@@ -63,6 +64,13 @@ Set Name= to distro, hostname or you can set a 'nickname'. If Name= is blank the
 
 The LogAll setting enables, or disables, logging every file that gets backed up. Set LogAll= to yes or no. Blank is the same as no.
 
+If to_email_address and from_email_address are set an email containing the log will be sent after the script finishes. 
+
+```YAML
+to_email_address=email@email.com
+from_email_address=email@email.com
+```
+
 The KeepQty setting tells the script to keep only keep the latest N backups (and delete older backups).
   - If KeepQty is blank or set to 0 all backups are kept.
 
@@ -77,6 +85,94 @@ KeepQty=5
 Make sure that backup_linux_plex.config and plex_backup_exclude.txt are in the same folder as Linux_Plex_Backup.sh
 
 **Note:** Due to some of the commands used **this script needs to be** run by a user in sudo, sudoers or wheel group, or as root
+
+If you want the script to send an email of the log after the script finishes you need to have msmtp installed (most Linux distros include msmtp).
+
+### Configuring msmtp so the script can send emails
+
+Depending on your Linux distro the msmtprc or config file can be either:
+```
+    /etc/msmtprc
+    ~/.msmtprc
+    $XDG_CONFIG_HOME/msmtp/config
+```
+
+The default msmtprc or config file usually contains:
+```
+# Set default values for all following accounts.
+defaults
+timeout 15
+tls on
+tls_trust_file /usr/builtin/etc/msmtp/ca-certificates.crt
+#logfile ~/.msmtplog
+
+# The SMTP server of the provider.
+#account user@gmail.com
+#host smtp.gmail.com
+#port 587
+#from user@gmail.com
+#auth on
+#user user@gmail.com
+#password passwd
+
+# Set a default account
+#account default: user@gmail.com
+```
+
+**Example email account settings for using a smtp server**
+```
+defaults
+timeout 15
+tls on
+tls_trust_file /usr/builtin/etc/msmtp/ca-certificates.crt
+#logfile ~/.msmtplog
+
+# The SMTP server of the provider.
+account dave@myisp.com
+host mail.myisp.com
+port 587
+from dave@myisp.com
+auth on
+user dave@myisp.com
+password mypassword
+
+# Set a default account
+account default: dave@myisp.com
+```
+
+If you don't want to include your email account's password in plain text in the msmtprc or config file see https://marlam.de/msmtp/msmtprc.txt
+
+**Example email account settings for using gmail**
+```
+# Set default values for all following accounts.
+defaults
+timeout 15
+tls on
+tls_trust_file /usr/builtin/etc/msmtp/ca-certificates.crt
+#logfile ~/.msmtplog
+
+# The SMTP server of the provider.
+account dave@gmail.com
+host smtp.gmail.com
+port 587
+from dave@gmail.com
+auth on
+user dave@gmail.com
+password gmailapppassword
+
+# Set a default account
+account default: dave@gmail.com
+```
+
+For gmail you will need to generate an "app password" and use that instead of your gmail password.
+
+1. Go to https://myaccount.google.com/apppasswords and sign into google.
+2. Enter a name in the form of `appname@computer-name` like `plexbackup@ubuntu` and click Create.
+3. In the "Generated app password" popup copy the 16 character app password which will be like `abcd efgh ijkl mnop`
+4. In your msmtprc or config file replace `password passwd` with the 16 character app password (without spaces) like:
+```
+password abcdefghijklmnop
+```
 
 ### Running the script
 

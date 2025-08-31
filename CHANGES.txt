@@ -1,3 +1,13 @@
+v1.3.9
+- Added support for Plex Media Server installed in snap.
+  - Set snap=yes in backup_linux_plex.config
+
+v1.2.8
+- Added optional support to send an email of the log after a backup.
+  - Set the to and from email addresses in backup_linux_plex.config
+  - Requires msmtp (most distros include msmtp).
+- Bug fix for sending email twice. 
+
 v1.1.6
 - Added KeepQty setting to delete old backups and only keep the latest N backups.
   - KeepQty=5 would keep just the latest 5 backups.
