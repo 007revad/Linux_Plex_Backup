@@ -2,7 +2,7 @@
 # shellcheck disable=SC2317,SC2181
 #--------------------------------------------------------------------------
 # Companion script for Linux Plex Backup script.
-# v1.0.5  09-Nov-2024  007revad
+# v1.1.6  31-Aug-2025  007revad
 #
 #   MUST be run by a user in sudo, sudoers or wheel group, or as root
 #
@@ -14,13 +14,14 @@
 # Script verified at https://www.shellcheck.net/
 #--------------------------------------------------------------------------
 
-scriptver="v1.0.5"
+scriptver="v1.1.6"
 script=Restore_Linux_Plex_Backup
 
 
 # Read variables from backup_linux_plex.config
 Backup_Directory=""
 Name=""
+snap=""
 LogAll=""
 if [[ -f $(dirname -- "$0";)/backup_linux_plex.config ]];then
     # shellcheck disable=SC1090,SC1091
@@ -208,7 +209,11 @@ fi
 # Find Plex Media Server location
 
 # Set the Plex Media Server data location
-Plex_Data_Path="/var/lib/plexmediaserver/Library/Application Support"
+if [[ ${snap,,} == "yes" ]]; then
+    Plex_Data_Path="/var/snap/plexmediaserver/common/Library/Application Support"
+else
+    Plex_Data_Path="/var/lib/plexmediaserver/Library/Application Support"
+fi
 
 
 #--------------------------------------------------------------------------
@@ -252,7 +257,11 @@ echo Plex version: "${Version}" |& tee -a "${Log_File}"
 
 echo "Stopping Plex..." |& tee -a "${Log_File}"
 
-Result=$(systemctl stop plexmediaserver)
+if [[ ${snap,,} == "yes" ]]; then
+    Result=$(snap stop plexmediaserver)
+else
+    Result=$(systemctl stop plexmediaserver)
+fi
 code="$?"
 # Give sockets a moment to close
 sleep 5
@@ -302,7 +311,12 @@ if [[ -n $Response ]]; then
             |& tee -a "${Log_File}" "${Tmp_Err_Log_File}"
         echo "${Response}" |& tee -a "${Log_File}" "${Tmp_Err_Log_File}"
         # Start Plex to make sure it's not left partially running
-        /usr/lib/plexmediaserver/Resources/start.sh
+        if [[ ${snap,,} == "yes" ]]; then
+            snap start plexmediaserver
+        else
+            #/usr/lib/plexmediaserver/Resources/start.sh
+            systemctl start plexmediaserver
+        fi
         # Abort script because Plex didn't shut down fully
         exit 255
     else
@@ -348,8 +362,12 @@ echo "=================================================" |& tee -a "${Log_File}"
 # Start Plex Media Server
 
 echo "Starting Plex..." |& tee -a "${Log_File}"
-#/usr/lib/plexmediaserver/Resources/start.sh
-systemctl start plexmediaserver
+if [[ ${snap,,} == "yes" ]]; then
+    snap start plexmediaserver
+else
+    #/usr/lib/plexmediaserver/Resources/start.sh
+    systemctl start plexmediaserver
+fi
 
 
 #--------------------------------------------------------------------------
