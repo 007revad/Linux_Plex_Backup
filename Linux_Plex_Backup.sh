@@ -392,7 +392,12 @@ if [[ -n $Response ]]; then
             |& tee -a "${Log_File}" "${Tmp_Err_Log_File}"
         echo "${Response}" |& tee -a "${Log_File}" "${Tmp_Err_Log_File}"
         # Start Plex to make sure it's not left partially running
-        /usr/lib/plexmediaserver/Resources/start.sh
+        if [[ ${snap,,} == "yes" ]]; then
+            snap start plexmediaserver
+        else
+            #/usr/lib/plexmediaserver/Resources/start.sh
+            systemctl start plexmediaserver
+        fi
         # Abort script because Plex didn't shut down fully
         exit 255
     else
