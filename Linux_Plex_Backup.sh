@@ -259,6 +259,7 @@ fi
 # DSM6  /volume1/Plex/Library/Application Support/Plex Media Server
 # DSM7  /volume1/PlexMediaServer/AppData/Plex Media Server
 # Linux /var/lib/plexmediaserver/Library/Application Support/Plex Media Server
+# snap  /var/snap/plexmediaserver/common/Library/Application Support
 
 # Set the Plex Media Server data location
 if [[ ${snap,,} == "yes" ]]; then
