@@ -24,13 +24,14 @@
 # https://arnaudr.io/2020/08/24/send-emails-from-your-terminal-with-msmtp/
 #--------------------------------------------------------------------------
 
-scriptver="v1.2.8"
+scriptver="v1.3.9"
 script=Linux_Plex_Backup
 
 
 # Read variables from backup_linux_plex.config
 Backup_Directory=""
 Name=""
+snap=""
 LogAll=""
 KeepQty=""
 to_email_address=""
@@ -260,7 +261,11 @@ fi
 # Linux /var/lib/plexmediaserver/Library/Application Support/Plex Media Server
 
 # Set the Plex Media Server data location
-Plex_Data_Path="/var/lib/plexmediaserver/Library/Application Support"
+if [[ ${snap,,} == "yes" ]]; then
+    Plex_Data_Path="/var/snap/plexmediaserver/common/Library/Application Support"
+else
+    Plex_Data_Path="/var/lib/plexmediaserver/Library/Application Support"
+fi
 
 
 #--------------------------------------------------------------------------
@@ -333,7 +338,11 @@ fi
 
 echo "Stopping Plex..." |& tee -a "${Log_File}"
 
-Result=$(systemctl stop plexmediaserver)
+if [[ ${snap,,} == "yes" ]]; then
+    Result=$(snap stop plexmediaserver)
+else
+    Result=$(systemctl stop plexmediaserver)
+fi
 code="$?"
 # Give sockets a moment to close
 sleep 5
@@ -466,8 +475,12 @@ echo "=================================================" |& tee -a "${Log_File}"
 # Start Plex Media Server
 
 echo "Starting Plex..." |& tee -a "${Log_File}"
-#/usr/lib/plexmediaserver/Resources/start.sh
-systemctl start plexmediaserver
+if [[ ${snap,,} == "yes" ]]; then
+    snap start plexmediaserver
+else
+    #/usr/lib/plexmediaserver/Resources/start.sh
+    systemctl start plexmediaserver
+fi
 
 
 #--------------------------------------------------------------------------
