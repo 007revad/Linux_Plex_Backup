@@ -1,3 +1,6 @@
+v1.3.10
+- Bug fix for not getting Plex version when Plex installed in Snap.
+
 v1.3.9
 - Added support for Plex Media Server installed in snap.
   - Set snap=yes in backup_linux_plex.config
