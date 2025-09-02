@@ -230,11 +230,20 @@ fi
 #--------------------------------------------------------------------------
 # Get Plex Media Server version
 
-Version="$(/usr/lib/plexmediaserver/Plex\ Media\ Server --version)"
-# Returns v1.29.2.6364-6d72b0cf6
-# Plex version without v or hex string
-Version=$(printf %s "${Version:1}"| cut -d "-" -f1)
-# Returns 1.29.2.6364
+if [[ ${snap,,} == "yes" ]]; then
+    #Version="$(/usr/snap/plexmediaserver/Plex\ Media\ Server --version)"
+    Version="$(snap list plexmediaserver | head -n 2 | tail -n 1 | awk '{print $2}')"
+    # Returns 1.29.2.6364-6d72b0cf6
+    # Plex version without hex string
+    Version=$(printf %s "$Version"| cut -d "-" -f1)
+    # Returns 1.29.2.6364
+else
+    Version="$(/usr/lib/plexmediaserver/Plex\ Media\ Server --version)"
+    # Returns v1.29.2.6364-6d72b0cf6
+    # Plex version without v or hex string
+    Version=$(printf %s "${Version:1}"| cut -d "-" -f1)
+    # Returns 1.29.2.6364
+fi
 
 
 #--------------------------------------------------------------------------
