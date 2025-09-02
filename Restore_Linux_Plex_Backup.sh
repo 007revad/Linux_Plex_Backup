@@ -2,7 +2,7 @@
 # shellcheck disable=SC2317,SC2181
 #--------------------------------------------------------------------------
 # Companion script for Linux Plex Backup script.
-# v1.1.6  31-Aug-2025  007revad
+# v1.1.7  3-Sep-2025  007revad
 #
 #   MUST be run by a user in sudo, sudoers or wheel group, or as root
 #
@@ -14,7 +14,7 @@
 # Script verified at https://www.shellcheck.net/
 #--------------------------------------------------------------------------
 
-scriptver="v1.1.6"
+scriptver="v1.1.7"
 script=Restore_Linux_Plex_Backup
 
 
