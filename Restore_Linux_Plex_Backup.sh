@@ -7,7 +7,7 @@
 #   MUST be run by a user in sudo, sudoers or wheel group, or as root
 #
 # To run the script:
-# sudo i /share/scripts/Restore_Linux_Plex_Backup.sh
+# sudo -i /share/scripts/Restore_Linux_Plex_Backup.sh
 #   Change /share/scripts/ to the path where this script is located
 #
 # Github: https://github.com/007revad/Linux_Plex_Backup
@@ -310,7 +310,13 @@ Response=$(pgrep -l plex)
 # Check if plexmediaserver was found in $Response
 if [[ -n $Response ]]; then
     # Forcefully kill any residual Plex processes (plug-ins, tuner service and EAE etc)
-    pgrep [Pp]lex | xargs kill -9 &>/dev/null
+#    pgrep [Pp]lex | xargs kill -9 &>/dev/null
+    PIDS=$(pgrep -i plex || true)
+    if [[ -n "$PIDS" ]]; then
+        echo "Force-killing remaining Plex processes: $PIDS" |& tee -a "${Log_File}"
+        kill -9 $PIDS 2>>"${Tmp_Err_Log_File}" || true
+    fi
+
     sleep 5
 
     # Check if plexmediaserver still found in $Response
