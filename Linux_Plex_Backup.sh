@@ -2,7 +2,7 @@
 # shellcheck disable=SC2317,SC2181,SC2009,SC2129,SC2163
 #--------------------------------------------------------------------------
 # Backup Linux Plex Database to tgz file in Backup folder.
-# v1.3.10  3-Sep-2025  007revad
+# v1.3.11  17-Nov-2025  007revad
 #
 #   MUST be run by a user in sudo, sudoers or wheel group, or as root
 #
@@ -24,7 +24,7 @@
 # https://arnaudr.io/2020/08/24/send-emails-from-your-terminal-with-msmtp/
 #--------------------------------------------------------------------------
 
-scriptver="v1.3.10"
+scriptver="v1.3.11"
 script=Linux_Plex_Backup
 
 
@@ -394,6 +394,11 @@ if [[ -n $Response ]]; then
     # Forcefully kill any residual Plex processes (plug-ins, tuner service and EAE etc)
     pgrep [Pp]lex | xargs kill -9 &>/dev/null
     sleep 5
+    PIDS=$(pgrep -i plex || true)
+    if [[ -n "$PIDS" ]]; then
+        echo "Force-killing remaining Plex processes: $PIDS" |& tee -a "${Log_File}"
+        kill -9 $PIDS 2>>"${Tmp_Err_Log_File}" || true
+    fi
 
     # Check if plexmediaserver still found in $Response
     Response=$(pgrep -l plex)
@@ -484,6 +489,17 @@ fi
 
 echo "Finished backing up Plex Media Server data files." |& tee -a "${Log_File}"
 echo "=================================================" |& tee -a "${Log_File}"
+
+
+#--------------------------------------------------------------------------
+# Verify backup archive
+
+echo "Verifying backup archive..." |& tee -a "${Log_File}"
+if tar -tzf "${Backup_Directory}/${Backup_Name}.tgz" >/dev/null 2>>"${Tmp_Err_Log_File}"; then
+    echo "Backup archive verified" |& tee -a "${Log_File}"
+else
+    echo "ERROR: Backup archive appears to be corrupted" |& tee -a "${Log_File}" "${Tmp_Err_Log_File}"
+fi
 
 
 #--------------------------------------------------------------------------
