@@ -263,10 +263,13 @@ fi
 
 # Set the Plex Media Server data location
 if [[ ${snap,,} == "yes" ]]; then
-    Plex_Data_Path="/var/snap/plexmediaserver/common/Library/Application Support"
+    Plex_Data_Path="${Plex_Data_Path:-/var/snap/plexmediaserver/common/Library/Application Support}"
 else
-    Plex_Data_Path="/var/lib/plexmediaserver/Library/Application Support"
+    Plex_Data_Path="${Plex_Data_Path:-/var/lib/plexmediaserver/Library/Application Support}"
 fi
+
+# Set Plex Service Name
+PLEX_SERVICE="${Plex_Service_Name:-plexmediaserver}"
 
 
 #--------------------------------------------------------------------------
@@ -351,7 +354,7 @@ echo "Stopping Plex..." |& tee -a "${Log_File}"
 if [[ ${snap,,} == "yes" ]]; then
     Result=$(snap stop plexmediaserver)
 else
-    Result=$(systemctl stop plexmediaserver)
+    Result=$(systemctl stop "$PLEX_SERVICE")
 fi
 code="$?"
 # Give sockets a moment to close
@@ -411,7 +414,7 @@ if [[ -n $Response ]]; then
             snap start plexmediaserver
         else
             #/usr/lib/plexmediaserver/Resources/start.sh
-            systemctl start plexmediaserver
+            systemctl start "$PLEX_SERVICE"
         fi
         # Abort script because Plex didn't shut down fully
         exit 255
@@ -510,7 +513,7 @@ if [[ ${snap,,} == "yes" ]]; then
     snap start plexmediaserver
 else
     #/usr/lib/plexmediaserver/Resources/start.sh
-    systemctl start plexmediaserver
+    systemctl start "$PLEX_SERVICE"
 fi
 
 
