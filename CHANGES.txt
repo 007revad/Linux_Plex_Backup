@@ -1,7 +1,7 @@
 v1.3.11
 - Added tar integrity check after backup.
 - Improved Plex process termination logic in Linux_Plex_Backup.sh and Restore_Linux_Plex_Backup.sh.
-- Added optional Plex_Data_Path and Plex_Service_Name settings for distros where they are different.
+- Added optional Plex_Data_Path and Plex_Service_Name settings for distros or containers where they are different.
 
 v1.3.10
 - Bug fix for not getting Plex version when Plex installed in Snap.
