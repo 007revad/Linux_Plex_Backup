@@ -23,6 +23,9 @@ Backup_Directory=""
 Name=""
 snap=""
 LogAll=""
+Plex_Data_Path=""
+Plex_Service_Name=""
+Create_Safety_Snapshot=""
 if [[ -f $(dirname -- "$0";)/backup_linux_plex.config ]];then
     # shellcheck disable=SC1090,SC1091
     while read -r var; do
@@ -355,6 +358,18 @@ if [[ -n $Response ]]; then
     fi
 else
     echo "All Plex processes have stopped." |& tee -a "${Log_File}"
+fi
+
+
+#--------------------------------------------------------------------------
+# Backup current Plex Media Server first if Create_Safety_Snapshot=yes
+
+# Backup before restore
+if [[ ${Create_Safety_Snapshot,,} == "yes" ]]; then
+    safety_name="${Nas}_$(date '+%Y%m%d-%H%M')_Plex_PRE_RESTORE.tgz"
+    echo "Creating safety snapshot at ${Backup_Directory}/${safety_name}" |& tee -a "${Log_File}"
+    tar -cvpzf "${Backup_Directory}/${safety_name}" -C "${Plex_Data_Path}" "Plex Media Server/" \
+        2> >(tee -a "${Log_File}" "${Tmp_Err_Log_File}" >&2)
 fi
 
 
