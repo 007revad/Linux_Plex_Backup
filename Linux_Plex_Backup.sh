@@ -395,8 +395,8 @@ Response=$(pgrep -l plex)
 # Check if plexmediaserver was found in $Response
 if [[ -n $Response ]]; then
     # Forcefully kill any residual Plex processes (plug-ins, tuner service and EAE etc)
-    pgrep [Pp]lex | xargs kill -9 &>/dev/null
-    sleep 5
+    #pgrep [Pp]lex | xargs kill -9 &>/dev/null
+    #sleep 5
     PIDS=$(pgrep -i plex || true)
     if [[ -n "$PIDS" ]]; then
         echo "Force-killing remaining Plex processes: $PIDS" |& tee -a "${Log_File}"
