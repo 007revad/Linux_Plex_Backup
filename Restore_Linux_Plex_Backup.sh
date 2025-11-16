@@ -2,7 +2,7 @@
 # shellcheck disable=SC2317,SC2181
 #--------------------------------------------------------------------------
 # Companion script for Linux Plex Backup script.
-# v1.1.7  3-Sep-2025  007revad
+# v1.1.8  17-Nov-2025  007revad
 #
 #   MUST be run by a user in sudo, sudoers or wheel group, or as root
 #
@@ -14,7 +14,7 @@
 # Script verified at https://www.shellcheck.net/
 #--------------------------------------------------------------------------
 
-scriptver="v1.1.7"
+scriptver="v1.1.8"
 script=Restore_Linux_Plex_Backup
 
 
@@ -313,7 +313,7 @@ Response=$(pgrep -l plex)
 # Check if plexmediaserver was found in $Response
 if [[ -n $Response ]]; then
     # Forcefully kill any residual Plex processes (plug-ins, tuner service and EAE etc)
-#    pgrep [Pp]lex | xargs kill -9 &>/dev/null
+    #pgrep [Pp]lex | xargs kill -9 &>/dev/null
     PIDS=$(pgrep -i plex || true)
     if [[ -n "$PIDS" ]]; then
         echo "Force-killing remaining Plex processes: $PIDS" |& tee -a "${Log_File}"
