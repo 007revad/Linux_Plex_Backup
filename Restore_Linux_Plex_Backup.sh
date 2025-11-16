@@ -265,6 +265,19 @@ echo Plex version: "${Version}" |& tee -a "${Log_File}"
 
 
 #--------------------------------------------------------------------------
+# Ask if ready to restore Plex Media Server
+
+echo "About to restore Plex from:"
+echo "  Backup: $(basename "$tgz_file")"
+echo "  To    : ${Plex_Data_Path}/Plex Media Server"
+read -r -p "This will overwrite existing Plex data. Continue? [y/n] " answer
+case "${answer,,}" in
+    y|yes) ;;
+    *) echo "Restore aborted by user." |& tee -a "${Log_File}"; exit 0 ;;
+esac
+
+
+#--------------------------------------------------------------------------
 # Stop Plex Media Server
 
 echo "Stopping Plex..." |& tee -a "${Log_File}"
