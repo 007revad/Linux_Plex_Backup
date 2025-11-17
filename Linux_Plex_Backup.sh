@@ -2,7 +2,7 @@
 # shellcheck disable=SC2317,SC2181,SC2009,SC2129,SC2163
 #--------------------------------------------------------------------------
 # Backup Linux Plex Database to tgz file in Backup folder.
-# v1.3.10  3-Sep-2025  007revad
+# v1.3.11  17-Nov-2025  007revad
 #
 #   MUST be run by a user in sudo, sudoers or wheel group, or as root
 #
@@ -24,7 +24,7 @@
 # https://arnaudr.io/2020/08/24/send-emails-from-your-terminal-with-msmtp/
 #--------------------------------------------------------------------------
 
-scriptver="v1.3.10"
+scriptver="v1.3.11"
 script=Linux_Plex_Backup
 
 
@@ -36,6 +36,8 @@ LogAll=""
 KeepQty=""
 to_email_address=""
 from_email_address=""
+Plex_Data_Path=""
+Plex_Service_Name=""
 if [[ -f $(dirname -- "$0";)/backup_linux_plex.config ]];then
     # shellcheck disable=SC1090,SC1091
     while read -r var; do
@@ -263,10 +265,13 @@ fi
 
 # Set the Plex Media Server data location
 if [[ ${snap,,} == "yes" ]]; then
-    Plex_Data_Path="/var/snap/plexmediaserver/common/Library/Application Support"
+    Plex_Data_Path="${Plex_Data_Path:-/var/snap/plexmediaserver/common/Library/Application Support}"
 else
-    Plex_Data_Path="/var/lib/plexmediaserver/Library/Application Support"
+    Plex_Data_Path="${Plex_Data_Path:-/var/lib/plexmediaserver/Library/Application Support}"
 fi
+
+# Set Plex Service Name
+PLEX_SERVICE="${Plex_Service_Name:-plexmediaserver}"
 
 
 #--------------------------------------------------------------------------
@@ -351,7 +356,7 @@ echo "Stopping Plex..." |& tee -a "${Log_File}"
 if [[ ${snap,,} == "yes" ]]; then
     Result=$(snap stop plexmediaserver)
 else
-    Result=$(systemctl stop plexmediaserver)
+    Result=$(systemctl stop "$PLEX_SERVICE")
 fi
 code="$?"
 # Give sockets a moment to close
@@ -392,8 +397,13 @@ Response=$(pgrep -l plex)
 # Check if plexmediaserver was found in $Response
 if [[ -n $Response ]]; then
     # Forcefully kill any residual Plex processes (plug-ins, tuner service and EAE etc)
-    pgrep [Pp]lex | xargs kill -9 &>/dev/null
-    sleep 5
+    #pgrep [Pp]lex | xargs kill -9 &>/dev/null
+    #sleep 5
+    PIDS=$(pgrep -i plex || true)
+    if [[ -n "$PIDS" ]]; then
+        echo "Force-killing remaining Plex processes: $PIDS" |& tee -a "${Log_File}"
+        kill -9 $PIDS 2>>"${Tmp_Err_Log_File}" || true
+    fi
 
     # Check if plexmediaserver still found in $Response
     Response=$(pgrep -l plex)
@@ -406,7 +416,7 @@ if [[ -n $Response ]]; then
             snap start plexmediaserver
         else
             #/usr/lib/plexmediaserver/Resources/start.sh
-            systemctl start plexmediaserver
+            systemctl start "$PLEX_SERVICE"
         fi
         # Abort script because Plex didn't shut down fully
         exit 255
@@ -487,6 +497,17 @@ echo "=================================================" |& tee -a "${Log_File}"
 
 
 #--------------------------------------------------------------------------
+# Verify backup archive
+
+echo "Verifying backup archive..." |& tee -a "${Log_File}"
+if tar -tzf "${Backup_Directory}/${Backup_Name}.tgz" >/dev/null 2>>"${Tmp_Err_Log_File}"; then
+    echo "Backup archive verified" |& tee -a "${Log_File}"
+else
+    echo "ERROR: Backup archive appears to be corrupted" |& tee -a "${Log_File}" "${Tmp_Err_Log_File}"
+fi
+
+
+#--------------------------------------------------------------------------
 # Start Plex Media Server
 
 echo "Starting Plex..." |& tee -a "${Log_File}"
@@ -494,7 +515,7 @@ if [[ ${snap,,} == "yes" ]]; then
     snap start plexmediaserver
 else
     #/usr/lib/plexmediaserver/Resources/start.sh
-    systemctl start plexmediaserver
+    systemctl start "$PLEX_SERVICE"
 fi
 
 

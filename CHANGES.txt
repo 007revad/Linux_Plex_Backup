@@ -1,3 +1,13 @@
+v1.3.11
+- Added tar integrity check after backup.
+- Added optional Plex_Data_Path and Plex_Service_Name settings in config file for distros or containers where they are different to:
+  - `/var/lib/plexmediaserver/Library/Application Support`
+  - `plexmediaserver`
+- Added option in config file to create a current backup before restoring.
+- Now shows which tar is about to be restored to where and asks you to confirm overwriting the existing Plex database.
+- Improved Plex process termination logic in Linux_Plex_Backup.sh and Restore_Linux_Plex_Backup.sh.
+- Fixed comment in config file for sending emails.
+
 v1.3.10
 - Bug fix for not getting Plex version when Plex installed in Snap.
 

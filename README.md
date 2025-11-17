@@ -1,10 +1,10 @@
 # Linux Plex Backup
 
 <a href="https://github.com/007revad/Linux_Plex_Backup/releases"><img src="https://img.shields.io/github/release/007revad/Linux_Plex_Backup.svg"></a>
-<a href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2F007revad%2FLinux_Plex_Backup&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=views&edge_flat=false"/></a>
+![Badge](https://hitscounter.dev/api/hit?url=https%3A%2F%2Fgithub.com%2F007revad%2FLinux_Plex_Backup&label=Visitors&icon=github&color=%23198754&message=&style=flat&tz=Australia%2FSydney)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/paypalme/007revad)
 [![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/007revad)
-[![committers.top badge](https://user-badge.committers.top/australia/007revad.svg)](https://user-badge.committers.top/australia/007revad)
+<!-- [![committers.top badge](https://user-badge.committers.top/australia/007revad.svg)](https://user-badge.committers.top/australia/007revad) -->
 
 ### Description
 
@@ -182,6 +182,48 @@ Run the script by a user in sudo, sudoers or wheel group.
 sudo -s "/share/scripts/Linux_Plex_Backup.sh"
 ```
 
+
+### Running automatically with systemd
+
+If you prefer to run the backup automatically with systemd timers instead of cron, you can use these example unit files.
+
+Create the service unit at `/etc/systemd/system/linux_plex_backup.service`:
+
+```ini
+[Unit]
+Description=Linux Plex Backup
+
+[Service]
+Type=oneshot
+ExecStart=/share/scripts/Linux_Plex_Backup.sh
+
+[Install]
+WantedBy=multi-user.target
+
+```
+**Note:** Replace "/share/scripts/" with the path to where Linux Plex Backup's files are located.
+
+Then create the timer unit at /etc/systemd/system/linux_plex_backup.timer:
+
+```
+[Unit]
+Description=Run Linux Plex Backup once a day
+
+[Timer]
+OnCalendar=*-*-* 03:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+After creating both files, reload systemd and start the timer:
+
+```
+sudo systemctl daemon-reload
+sudo systemctl enable --now linux_plex_backup.timer
+```
+Adjust /share/scripts/Linux_Plex_Backup.sh and the OnCalendar time to match your actual script path and preferred backup schedule.
+
 ### Troubleshooting
 
 | Issue | Cause | Solution |
@@ -227,7 +269,7 @@ sudo -s "/share/scripts/Restore_Linux_Plex_Backup.sh"
 
 **Note:** Replace "/share/scripts/" with the path to where Linux Plex Backup's files are located.
 
-The first thing you'll see is a menu listing all of your Plex backups that you created with Linux Plex Backup. Select the backup you want to restore and the sript will do the rest.
+The first thing you'll see is a menu listing all of your Plex backups that you created with Linux Plex Backup. Select the backup you want to restore and the script will do the rest.
 
 <img src="images/restore.png">
 
@@ -240,5 +282,3 @@ If you previously ran Linux Plex Backup with the **test** argument you can run R
 ```YAML
 sudo -s "/share/scripts/Restore_Linux_Plex_Backup.sh" test
 ```
-
-**Note:** Replace "/share/scripts/" with the path to where Linux Plex Backup's files are located.

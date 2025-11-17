@@ -2,19 +2,19 @@
 # shellcheck disable=SC2317,SC2181
 #--------------------------------------------------------------------------
 # Companion script for Linux Plex Backup script.
-# v1.1.7  3-Sep-2025  007revad
+# v1.1.8  17-Nov-2025  007revad
 #
 #   MUST be run by a user in sudo, sudoers or wheel group, or as root
 #
 # To run the script:
-# sudo i /share/scripts/Restore_Linux_Plex_Backup.sh
+# sudo -i /share/scripts/Restore_Linux_Plex_Backup.sh
 #   Change /share/scripts/ to the path where this script is located
 #
 # Github: https://github.com/007revad/Linux_Plex_Backup
 # Script verified at https://www.shellcheck.net/
 #--------------------------------------------------------------------------
 
-scriptver="v1.1.7"
+scriptver="v1.1.8"
 script=Restore_Linux_Plex_Backup
 
 
@@ -23,6 +23,9 @@ Backup_Directory=""
 Name=""
 snap=""
 LogAll=""
+Plex_Data_Path=""
+Plex_Service_Name=""
+Create_Safety_Snapshot=""
 if [[ -f $(dirname -- "$0";)/backup_linux_plex.config ]];then
     # shellcheck disable=SC1090,SC1091
     while read -r var; do
@@ -210,10 +213,13 @@ fi
 
 # Set the Plex Media Server data location
 if [[ ${snap,,} == "yes" ]]; then
-    Plex_Data_Path="/var/snap/plexmediaserver/common/Library/Application Support"
+    Plex_Data_Path="${Plex_Data_Path:-/var/snap/plexmediaserver/common/Library/Application Support}"
 else
-    Plex_Data_Path="/var/lib/plexmediaserver/Library/Application Support"
+    Plex_Data_Path="${Plex_Data_Path:-/var/lib/plexmediaserver/Library/Application Support}"
 fi
+
+# Set Plex Service Name
+PLEX_SERVICE="${Plex_Service_Name:-plexmediaserver}"
 
 
 #--------------------------------------------------------------------------
@@ -262,6 +268,19 @@ echo Plex version: "${Version}" |& tee -a "${Log_File}"
 
 
 #--------------------------------------------------------------------------
+# Ask if ready to restore Plex Media Server
+
+echo "About to restore Plex from:"
+echo "  Backup: $(basename "$tgz_file")"
+echo "  To    : ${Plex_Data_Path}/Plex Media Server"
+read -r -p "This will overwrite existing Plex data. Continue? [y/n] " answer
+case "${answer,,}" in
+    y|yes) ;;
+    *) echo "Restore aborted by user." |& tee -a "${Log_File}"; exit 0 ;;
+esac
+
+
+#--------------------------------------------------------------------------
 # Stop Plex Media Server
 
 echo "Stopping Plex..." |& tee -a "${Log_File}"
@@ -269,7 +288,7 @@ echo "Stopping Plex..." |& tee -a "${Log_File}"
 if [[ ${snap,,} == "yes" ]]; then
     Result=$(snap stop plexmediaserver)
 else
-    Result=$(systemctl stop plexmediaserver)
+    Result=$(systemctl stop "$PLEX_SERVICE")
 fi
 code="$?"
 # Give sockets a moment to close
@@ -310,7 +329,13 @@ Response=$(pgrep -l plex)
 # Check if plexmediaserver was found in $Response
 if [[ -n $Response ]]; then
     # Forcefully kill any residual Plex processes (plug-ins, tuner service and EAE etc)
-    pgrep [Pp]lex | xargs kill -9 &>/dev/null
+    #pgrep [Pp]lex | xargs kill -9 &>/dev/null
+    PIDS=$(pgrep -i plex || true)
+    if [[ -n "$PIDS" ]]; then
+        echo "Force-killing remaining Plex processes: $PIDS" |& tee -a "${Log_File}"
+        kill -9 $PIDS 2>>"${Tmp_Err_Log_File}" || true
+    fi
+
     sleep 5
 
     # Check if plexmediaserver still found in $Response
@@ -324,7 +349,7 @@ if [[ -n $Response ]]; then
             snap start plexmediaserver
         else
             #/usr/lib/plexmediaserver/Resources/start.sh
-            systemctl start plexmediaserver
+            systemctl start "$PLEX_SERVICE"
         fi
         # Abort script because Plex didn't shut down fully
         exit 255
@@ -333,6 +358,18 @@ if [[ -n $Response ]]; then
     fi
 else
     echo "All Plex processes have stopped." |& tee -a "${Log_File}"
+fi
+
+
+#--------------------------------------------------------------------------
+# Backup current Plex Media Server first if Create_Safety_Snapshot=yes
+
+# Backup before restore
+if [[ ${Create_Safety_Snapshot,,} == "yes" ]]; then
+    safety_name="${Nas}_$(date '+%Y%m%d-%H%M')_Plex_PRE_RESTORE.tgz"
+    echo "Creating safety snapshot at ${Backup_Directory}/${safety_name}" |& tee -a "${Log_File}"
+    tar -cvpzf "${Backup_Directory}/${safety_name}" -C "${Plex_Data_Path}" "Plex Media Server/" \
+        2> >(tee -a "${Log_File}" "${Tmp_Err_Log_File}" >&2)
 fi
 
 
@@ -375,7 +412,7 @@ if [[ ${snap,,} == "yes" ]]; then
     snap start plexmediaserver
 else
     #/usr/lib/plexmediaserver/Resources/start.sh
-    systemctl start plexmediaserver
+    systemctl start "$PLEX_SERVICE"
 fi
 
 
