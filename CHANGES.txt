@@ -3,6 +3,7 @@ v1.3.11
 - Improved Plex process termination logic in Linux_Plex_Backup.sh and Restore_Linux_Plex_Backup.sh.
 - Added optional Plex_Data_Path and Plex_Service_Name settings for distros or containers where they are different.
 - Added option to create a current backup before restoring.
+- Fixed comment in config file for sending emails.
 
 v1.3.10
 - Bug fix for not getting Plex version when Plex installed in Snap.
