@@ -1,10 +1,10 @@
 v1.3.11
 - Added tar integrity check after backup.
-- Improved Plex process termination logic in Linux_Plex_Backup.sh and Restore_Linux_Plex_Backup.sh.
 - Added optional Plex_Data_Path and Plex_Service_Name settings for distros or containers where they are different to:
   - `/var/lib/plexmediaserver/Library/Application Support`
   - `plexmediaserver`
 - Added option to create a current backup before restoring.
+- Improved Plex process termination logic in Linux_Plex_Backup.sh and Restore_Linux_Plex_Backup.sh.
 - Fixed comment in config file for sending emails.
 
 v1.3.10
