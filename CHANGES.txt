@@ -4,7 +4,7 @@ v1.3.11
   - `/var/lib/plexmediaserver/Library/Application Support`
   - `plexmediaserver`
 - Added option in config file to create a current backup before restoring.
-- Now shows which tar is about to be restored to where and asks you to confirm overwriting the existing Plex database.
+- Now shows which tar file is about to be restored to where and asks you to confirm overwriting the existing Plex database.
 - Improved Plex process termination logic in Linux_Plex_Backup.sh and Restore_Linux_Plex_Backup.sh.
 - Fixed comment in config file for sending emails.
 
